@@ -1,6 +1,6 @@
 ---
 name: maestro-i3
-version: 1.0.0
+version: 1.1.0
 description: "Skill orchestrator and recommender that discovers and indexes every installed skill, plugin, agent, and MCP tool in your environment. Use when: the user asks 'what skill should I use', 'help me pick', 'which tool', 'how should I approach this', 'maestro', 'what's the best way to', 'recommend a skill', 'skill flow', or seems unsure how to approach a task. Also trigger PROACTIVELY when you notice the user is about to start work that would clearly benefit from a skill they haven't invoked — for example, they're about to write code without a plan, debugging without structure, or building UI without design guidance. The goal is to make sure the user never misses a powerful tool they already have installed."
 ---
 
@@ -198,9 +198,48 @@ When making recommendations:
 
 Learning should feel natural — like a colleague who remembers how you like to work. Never mention the learning file to the user or make it feel mechanical. Just let recommendations get smarter over time.
 
+### Flow Retrospective
+
+After Maestro recommends a multi-step flow AND the user follows through with it (completes the last step or reaches a natural stopping point), trigger a brief retrospective:
+
+> "You just finished the **[flow name]** flow. Quick retro — how was it?"
+>
+> **Rate:** 1-5 (1 = didn't help, 5 = perfect)
+>
+> **What worked?** (optional)
+>
+> **What didn't?** (optional)
+
+Keep this lightweight — the user should be able to answer in one line or skip entirely. If they skip or say "fine", record a 4/5 and move on.
+
+#### How to use retro data
+
+Save retrospective results to `learning/flow-retros.md` in this format:
+
+```markdown
+# Flow Retrospectives
+
+## [Flow Name] — [date]
+- **Steps:** skill-a → skill-b → skill-c
+- **Rating:** 4/5
+- **Worked:** "the planning step saved me time"
+- **Didn't work:** "code review felt redundant for this size task"
+- **Task context:** brief description of what the flow was used for
+```
+
+Use retro data to evolve flow recommendations:
+
+1. **High-rated flows (4-5)** — Promote these in Preferred Flows. Suggest them confidently for similar tasks.
+2. **Mid-rated flows (3)** — Look at the feedback. If a specific step was the issue, propose a modified flow next time that drops or replaces that step.
+3. **Low-rated flows (1-2)** — Do NOT suggest this flow again for similar contexts. If the user gave feedback on what went wrong, use it to construct a better alternative. Log it in Rejected Recommendations with the reason.
+4. **Repeated feedback patterns** — If multiple retros say the same step is weak (e.g., "brainstorming is overkill for small tasks"), create a Style Preference from it and auto-adapt future flows.
+5. **Flow evolution** — When you notice a flow getting consistent 3s with the same complaint, proactively propose a revised version: "Last few times you used this flow, you mentioned X was too heavy. Want to try a leaner version that skips that step?"
+
+The goal: flows should get better with every use. A flow that was suggested 5 times and rated poorly should never be suggested a 6th time in the same form.
+
 ### Version check
 
-Current version: **1.0.0**. When the user asks "what version is maestro?" or "is maestro up to date?", report this version. To update, pull the latest from GitHub:
+Current version: **1.1.0**. When the user asks "what version is maestro?" or "is maestro up to date?", report this version. To update, pull the latest from GitHub:
 ```bash
 cd ~/.claude/skills/maestro-i3 && git pull
 ```
