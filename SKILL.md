@@ -1,5 +1,6 @@
 ---
 name: maestro-i3
+version: 1.0.0
 description: "Skill orchestrator and recommender that discovers and indexes every installed skill, plugin, agent, and MCP tool in your environment. Use when: the user asks 'what skill should I use', 'help me pick', 'which tool', 'how should I approach this', 'maestro', 'what's the best way to', 'recommend a skill', 'skill flow', or seems unsure how to approach a task. Also trigger PROACTIVELY when you notice the user is about to start work that would clearly benefit from a skill they haven't invoked — for example, they're about to write code without a plan, debugging without structure, or building UI without design guidance. The goal is to make sure the user never misses a powerful tool they already have installed."
 ---
 
@@ -147,3 +148,59 @@ Keep proactive suggestions brief — one line, not a full recommendation. Only e
 - **Chain when valuable.** Only recommend multi-step flows when the sequence genuinely adds value. Don't chain for the sake of it.
 - **Remember context.** If the user just finished one skill, recommend the natural next step.
 - **Adapt to the environment.** Every user's setup is different. Your recommendations should reflect what THEY have, not a generic toolkit.
+
+## Adaptive Learning
+
+Maestro learns from the user over time. This does NOT replace recommendations — it enhances them by anticipating patterns and preferences.
+
+### How learning works
+
+On every invocation, check for `learning/user-patterns.md` in this skill's directory (`~/.claude/skills/maestro-i3/learning/user-patterns.md`). If it doesn't exist, create it. This file persists across sessions and contains:
+
+```markdown
+# User Patterns
+
+## Favorites
+Skills the user reaches for most often, ranked by frequency.
+
+## Preferred Flows
+Multi-step sequences the user has used and liked.
+
+## Rejected Recommendations
+Skills Maestro suggested that the user declined or replaced — and what they chose instead.
+
+## Style Preferences
+How the user likes to work (e.g., "skips brainstorming for small tasks", "always wants TDD", "prefers quick over full ceremony").
+
+## Context Signals
+Patterns like "when working on UI, always starts with X" or "for this project, prefers Y over Z".
+```
+
+### When to update the learning file
+
+Update `learning/user-patterns.md` after these events:
+
+1. **User accepts a recommendation** — increment that skill's count in Favorites
+2. **User rejects a recommendation** — log what was suggested vs what they chose in Rejected Recommendations
+3. **User completes a flow** — save the flow in Preferred Flows
+4. **User expresses a preference** — e.g., "I don't need brainstorming for small stuff" → save in Style Preferences
+5. **User shows a context pattern** — e.g., they always pick the same skill for a certain type of work → save in Context Signals
+
+### How to use learning data
+
+When making recommendations:
+
+1. **Check Favorites first** — If the user's top skills include something that fits, lead with it
+2. **Check Preferred Flows** — If they've used a flow before for a similar task, suggest it again
+3. **Avoid Rejected patterns** — Don't re-suggest things they've consistently declined
+4. **Apply Style Preferences** — If they prefer quick workflows, don't suggest full ceremony
+5. **Match Context Signals** — If there's a pattern for this type of work, follow it
+
+Learning should feel natural — like a colleague who remembers how you like to work. Never mention the learning file to the user or make it feel mechanical. Just let recommendations get smarter over time.
+
+### Version check
+
+Current version: **1.0.0**. When the user asks "what version is maestro?" or "is maestro up to date?", report this version. To update, pull the latest from GitHub:
+```bash
+cd ~/.claude/skills/maestro-i3 && git pull
+```

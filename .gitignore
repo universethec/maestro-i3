@@ -1,0 +1,4 @@
+# User-specific learning data (stays local, not shared)
+learning/
+# Auto-generated skill catalog (rebuilt per environment)
+references/skill-catalog.md
