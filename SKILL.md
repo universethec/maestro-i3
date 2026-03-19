@@ -1,6 +1,6 @@
 ---
 name: maestro-i3
-version: 1.2.1
+version: 1.2.2
 description: "Skill orchestrator and recommender that discovers and indexes every installed skill, plugin, agent, and MCP tool in your environment. Use when: the user asks 'what skill should I use', 'help me pick', 'which tool', 'how should I approach this', 'maestro', 'what's the best way to', 'recommend a skill', 'skill flow', or seems unsure how to approach a task. Also trigger PROACTIVELY when you notice the user is about to start work that would clearly benefit from a skill they haven't invoked — for example, they're about to write code without a plan, debugging without structure, or building UI without design guidance. The goal is to make sure the user never misses a powerful tool they already have installed."
 ---
 
@@ -248,9 +248,52 @@ Use retro data to evolve flow recommendations:
 
 The goal: flows should get better with every use. A flow that was suggested 5 times and rated poorly should never be suggested a 6th time in the same form.
 
-### Version check
+### Version & Updates
 
-Current version: **1.2.1**. When the user asks "what version is maestro?" or "is maestro up to date?", report this version. To update, pull the latest from GitHub:
-```bash
-cd ~/.claude/skills/maestro-i3 && git pull
-```
+**Current version:** 1.2.2
+**Repository:** https://github.com/universethec/maestro-i3
+
+#### Checking for updates
+
+When the user asks "what version is maestro?", "is maestro up to date?", or "update maestro":
+
+1. Report the current local version: **1.2.2**
+2. Check the latest version on GitHub:
+   ```bash
+   git -C ~/.claude/skills/maestro-i3 fetch origin --tags 2>/dev/null && git -C ~/.claude/skills/maestro-i3 describe --tags --abbrev=0 origin/main 2>/dev/null
+   ```
+3. Compare local vs remote:
+   - If same: "Maestro is up to date (v1.2.2)."
+   - If remote is newer: "Update available: v{local} → v{remote}. Run update?"
+
+#### Running the update
+
+When the user confirms they want to update:
+
+1. **Check for local changes** to the skill catalog and learning files:
+   ```bash
+   cd ~/.claude/skills/maestro-i3 && git stash --include-untracked
+   ```
+2. **Pull the latest:**
+   ```bash
+   cd ~/.claude/skills/maestro-i3 && git pull origin main --tags
+   ```
+3. **Restore local data** (catalog and learning are user-specific, not tracked by git):
+   ```bash
+   cd ~/.claude/skills/maestro-i3 && git stash pop 2>/dev/null
+   ```
+4. **Show changelog** — read the commit messages between old and new version:
+   ```bash
+   cd ~/.claude/skills/maestro-i3 && git log v{old}..v{new} --oneline
+   ```
+5. Tell the user what changed and confirm the new version.
+
+#### Important
+
+- `references/skill-catalog.md` and `learning/` are local data — they are gitignored and never overwritten by updates
+- Only SKILL.md and core skill logic get updated from GitHub
+- If `git pull` fails (e.g., no .git directory), instruct the user to re-clone:
+  ```bash
+  rm -rf ~/.claude/skills/maestro-i3 && git clone https://github.com/universethec/maestro-i3.git ~/.claude/skills/maestro-i3
+  ```
+  Note: this will NOT lose their skill catalog or learning data if those files are gitignored. If they are not gitignored, warn the user to back them up first.
