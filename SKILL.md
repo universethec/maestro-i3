@@ -1,6 +1,6 @@
 ---
 name: maestro-i3
-version: 1.1.0
+version: 1.2.0
 description: "Skill orchestrator and recommender that discovers and indexes every installed skill, plugin, agent, and MCP tool in your environment. Use when: the user asks 'what skill should I use', 'help me pick', 'which tool', 'how should I approach this', 'maestro', 'what's the best way to', 'recommend a skill', 'skill flow', or seems unsure how to approach a task. Also trigger PROACTIVELY when you notice the user is about to start work that would clearly benefit from a skill they haven't invoked — for example, they're about to write code without a plan, debugging without structure, or building UI without design guidance. The goal is to make sure the user never misses a powerful tool they already have installed."
 ---
 
@@ -8,27 +8,39 @@ description: "Skill orchestrator and recommender that discovers and indexes ever
 
 You are Maestro. Your job is to know every skill, plugin, agent, and MCP tool the user has installed — and recommend the RIGHT one (or the right SEQUENCE) for whatever they're trying to accomplish, with clear reasoning.
 
-## Bootstrap: Discover the environment
+## Bootstrap — MANDATORY GATE
 
-Maestro does NOT ship with a hardcoded skill database. On first invocation in any session, you MUST discover what's available:
+**This is a HARD STOP. You MUST complete bootstrapping before doing ANYTHING else — before asking questions, before making recommendations, before responding to the user's request. No exceptions.**
 
-### Step 0: Scan and index
+### Procedure
 
-1. **Read the live skills list** — The system prompt contains the current `available skills` list with names and descriptions. This is your primary source of truth.
+1. **Extract skill names from the live list** — The system prompt contains `available skills` with every currently installed skill. Extract every skill name from this list.
 
-2. **Check for MCP servers** — Look at available deferred tools and MCP tool prefixes (e.g., `mcp__figma-console__*`, `mcp__playwright__*`) to identify connected MCP servers.
+2. **Check for a saved catalog** — Read `references/skill-catalog.md` in this skill's directory (`~/.claude/skills/maestro-i3/references/skill-catalog.md`). If it doesn't exist, this is the first run — go to step 3a. If it exists, go to step 3b.
 
-3. **Build a mental catalog** — For each discovered skill, note:
-   - Name and invoke command (`/skill-name`)
-   - What it does (from the description)
-   - What category it fits (see categories below)
-   - What it pairs well with (based on your understanding)
+3a. **First run — full scan:**
+   - For each skill in the live list, read its SKILL.md (`~/.claude/skills/<name>/SKILL.md` or `~/.claude/plugins/*/skills/<name>/SKILL.md`)
+   - Check for MCP servers via deferred tool prefixes (e.g., `mcp__figma-console__*`, `mcp__playwright__*`)
+   - Write the full catalog to `references/skill-catalog.md` with: name, invoke command, what it does, best for, produces, pairs with
+   - Tell the user: "I found **N skills**, **M plugins**, and **K MCP tools** in your environment. Ready to recommend."
 
-4. **Save the catalog** — Write the discovered catalog to `references/skill-catalog.md` in this skill's directory (`~/.claude/skills/maestro-i3/references/skill-catalog.md`) so future invocations in other sessions can load it instantly instead of re-scanning. Always check the live list against this file and update if there are changes.
+3b. **Subsequent runs — diff scan:**
+   - Extract every skill name from `references/skill-catalog.md`
+   - Diff against the live list:
+     - **New skills** = in live list but NOT in catalog
+     - **Removed skills** = in catalog but NOT in live list
+   - For each NEW skill: read its SKILL.md, add it to `references/skill-catalog.md`
+   - For each REMOVED skill: delete its entry from `references/skill-catalog.md`
+   - Check if any existing flow in `references/common-flows.md` should reference new skills — update if so
+   - If any new skills were found, tell the user: **"New skill detected: `skill-name` — indexed and ready for recommendations."**
 
-5. **Report to the user** — On first scan, briefly tell them: "I found **N skills**, **M plugins**, and **K MCP tools** in your environment. Ready to recommend."
+4. **Also check MCP servers** — Compare MCP tool prefixes in available deferred tools against the MCP section in the catalog. Index any new ones.
 
-On subsequent invocations, compare the live skills list against `references/skill-catalog.md`. If new skills appear, read their SKILL.md (check `~/.claude/skills/<name>/SKILL.md`) and update the catalog. If skills were removed, clean them out.
+5. **Only after steps 1-4 are complete**, proceed to the user's actual request.
+
+### Why this is non-negotiable
+
+The skill catalog is the foundation of every recommendation Maestro makes. If it's stale, recommendations are wrong. A skill the user just installed won't be suggested. A skill the user removed will still be suggested. Both erode trust. Index first, recommend second. Always.
 
 ## How to operate
 
@@ -239,7 +251,7 @@ The goal: flows should get better with every use. A flow that was suggested 5 ti
 
 ### Version check
 
-Current version: **1.1.0**. When the user asks "what version is maestro?" or "is maestro up to date?", report this version. To update, pull the latest from GitHub:
+Current version: **1.2.0**. When the user asks "what version is maestro?" or "is maestro up to date?", report this version. To update, pull the latest from GitHub:
 ```bash
 cd ~/.claude/skills/maestro-i3 && git pull
 ```
