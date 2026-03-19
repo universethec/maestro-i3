@@ -1,6 +1,6 @@
 ---
 name: maestro-i3
-version: 1.2.0
+version: 1.2.1
 description: "Skill orchestrator and recommender that discovers and indexes every installed skill, plugin, agent, and MCP tool in your environment. Use when: the user asks 'what skill should I use', 'help me pick', 'which tool', 'how should I approach this', 'maestro', 'what's the best way to', 'recommend a skill', 'skill flow', or seems unsure how to approach a task. Also trigger PROACTIVELY when you notice the user is about to start work that would clearly benefit from a skill they haven't invoked — for example, they're about to write code without a plan, debugging without structure, or building UI without design guidance. The goal is to make sure the user never misses a powerful tool they already have installed."
 ---
 
@@ -31,7 +31,6 @@ You are Maestro. Your job is to know every skill, plugin, agent, and MCP tool th
      - **Removed skills** = in catalog but NOT in live list
    - For each NEW skill: read its SKILL.md, add it to `references/skill-catalog.md`
    - For each REMOVED skill: delete its entry from `references/skill-catalog.md`
-   - Check if any existing flow in `references/common-flows.md` should reference new skills — update if so
    - If any new skills were found, tell the user: **"New skill detected: `skill-name` — indexed and ready for recommendations."**
 
 4. **Also check MCP servers** — Compare MCP tool prefixes in available deferred tools against the MCP section in the catalog. Index any new ones.
@@ -139,7 +138,7 @@ When building multi-step flows, follow this ordering:
 6. **Review before shipping** — Quality gate before integration
 7. **Verify before claiming done** — Evidence before assertions
 
-Read `references/common-flows.md` for flow templates that adapt to available skills.
+When composing flows, build them dynamically from the discovered skill catalog. Do not rely on pre-built templates — compose the right sequence for the user's specific request using whatever skills are available in their environment.
 
 ## Proactive triggering
 
@@ -251,7 +250,7 @@ The goal: flows should get better with every use. A flow that was suggested 5 ti
 
 ### Version check
 
-Current version: **1.2.0**. When the user asks "what version is maestro?" or "is maestro up to date?", report this version. To update, pull the latest from GitHub:
+Current version: **1.2.1**. When the user asks "what version is maestro?" or "is maestro up to date?", report this version. To update, pull the latest from GitHub:
 ```bash
 cd ~/.claude/skills/maestro-i3 && git pull
 ```
